@@ -92,58 +92,67 @@
   <script>
     var dealId = null;
 
-    ZOHO.embeddedApp.on("PageLoad", function(data) {
-      dealId = data.EntityId;
-    });
+ZOHO.embeddedApp.on("PageLoad", function(data) {
+  dealId = data.EntityId;
+  console.log("PageLoad recebido, dealId:", dealId);
+});
 
-    ZOHO.embeddedApp.init();
+ZOHO.embeddedApp.init().then(function() {
+  console.log("SDK inicializado");
+});
 
-    function asociar() {
-      var generacionId = document.getElementById("generacionId").value.trim();
-      var btn = document.getElementById("btnAsociar");
-      var msg = document.getElementById("msg");
+function asociar() {
+  var generacionId = document.getElementById("generacionId").value.trim();
+  var btn = document.getElementById("btnAsociar");
+  var msg = document.getElementById("msg");
 
-      msg.className = "msg";
-      msg.textContent = "";
+  msg.className = "msg";
+  msg.textContent = "";
 
-      if (!generacionId) {
-        msg.className = "msg error";
-        msg.textContent = "Por favor introduce el ID de la Generación.";
-        return;
-      }
-      if (!dealId) {
-        msg.className = "msg error";
-        msg.textContent = "No se pudo obtener el ID del trato. Recarga la página.";
-        return;
-      }
+  if (!generacionId) {
+    msg.className = "msg error";
+    msg.textContent = "Por favor introduce el ID de la Generación.";
+    return;
+  }
+  if (!dealId) {
+    msg.className = "msg error";
+    msg.textContent = "No se pudo obtener el ID del trato. Recarga la página.";
+    return;
+  }
 
-      btn.disabled = true;
-      btn.textContent = "Asociando...";
+  btn.disabled = true;
+  btn.textContent = "Asociando...";
 
-      ZOHO.CRM.API.callFunction("RC_AsociarGeneracionDeal", {
-        arguments: JSON.stringify({ dealId: dealId, generacionId: generacionId })
-      }).then(function(response) {
-        btn.disabled = false;
-        btn.textContent = "Asociar";
-        var result = response.details && response.details.output
-          ? response.details.output
-          : JSON.stringify(response);
+  ZOHO.CRM.API.callFunction("RC_AsociarGeneracionDeal", {
+    arguments: JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) })
+  }).then(function(response) {
+    console.log("Resposta função:", response);
+    btn.disabled = false;
+    btn.textContent = "Asociar";
 
-        if (result.indexOf("ERROR") !== -1) {
-          msg.className = "msg error";
-          msg.textContent = result;
-        } else {
-          msg.className = "msg success";
-          msg.textContent = result;
-          document.getElementById("generacionId").value = "";
-        }
-      }).catch(function(err) {
-        btn.disabled = false;
-        btn.textContent = "Asociar";
-        msg.className = "msg error";
-        msg.textContent = "Error de conexión: " + JSON.stringify(err);
-      });
+    var result = "";
+    if (response && response.details && response.details.output) {
+      result = response.details.output;
+    } else {
+      result = JSON.stringify(response);
     }
+
+    if (result.indexOf("ERROR") !== -1) {
+      msg.className = "msg error";
+      msg.textContent = result;
+    } else {
+      msg.className = "msg success";
+      msg.textContent = result;
+      document.getElementById("generacionId").value = "";
+    }
+  }).catch(function(err) {
+    console.error("Erro callFunction:", err);
+    btn.disabled = false;
+    btn.textContent = "Asociar";
+    msg.className = "msg error";
+    msg.textContent = "Error: " + JSON.stringify(err);
+  });
+}
   </script>
 </body>
 </html>
