@@ -64,19 +64,18 @@
       btn.disabled = true;
       btn.textContent = "Asociando...";
 
-      var url = "https://www.zohoapis.eu/crm/v7/functions/rc_asociargeneraciondeal/actions/execute?auth_type=apikey&zapikey=1003.f72a4a634279bdff28a4a04409ea04aa.cd549a812552ea70665b95395bf135cb";
+      var apiUrl = "https://www.zohoapis.eu/crm/v7/functions/rc_asociargeneraciondeal/actions/execute?auth_type=apikey&zapikey=1003.f72a4a634279bdff28a4a04409ea04aa.cd549a812552ea70665b95395bf135cb";
 
-      fetch(url, {
-        method: "POST",
+      ZOHO.CRM.HTTP.post({
+        url: apiUrl,
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: "arguments=" + encodeURIComponent(JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) }))
-      })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        console.log("Resposta:", data);
+      }).then(function(response) {
+        console.log("Resposta:", response);
         btn.disabled = false;
         btn.textContent = "Asociar";
 
+        var data = typeof response === "string" ? JSON.parse(response) : response;
         var result = data && data.details && data.details.output
           ? data.details.output
           : JSON.stringify(data);
@@ -89,8 +88,7 @@
           msg.textContent = result;
           document.getElementById("generacionId").value = "";
         }
-      })
-      .catch(function(err) {
+      }).catch(function(err) {
         console.error("Erro:", err);
         btn.disabled = false;
         btn.textContent = "Asociar";
