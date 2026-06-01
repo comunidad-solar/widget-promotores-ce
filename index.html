@@ -90,71 +90,39 @@
   </div>
 
   <script>
-    var dealId = null;
+    var url = "https://www.zohoapis.eu/crm/v7/functions/rc_asociargeneraciondeal/actions/execute?auth_type=apikey&zapikey=1003.f72a4a634279bdff28a4a04409ea04aa.cd549a812552ea70665b95395bf135cb";
 
-ZOHO.embeddedApp.on("PageLoad", function(data) {
-  dealId = data.EntityId;
-  console.log("PageLoad | dealId:", dealId);
+fetch(url, {
+  method: "POST",
+  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  body: "arguments=" + encodeURIComponent(JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) }))
+})
+.then(function(res) { return res.json(); })
+.then(function(data) {
+  console.log("Resposta:", data);
+  btn.disabled = false;
+  btn.textContent = "Asociar";
+
+  var result = data && data.details && data.details.output
+    ? data.details.output
+    : JSON.stringify(data);
+
+  if (result.indexOf("ERROR") !== -1) {
+    msg.className = "msg error";
+    msg.textContent = result;
+  } else {
+    msg.className = "msg success";
+    msg.textContent = result;
+    document.getElementById("generacionId").value = "";
+  }
+})
+.catch(function(err) {
+  console.error("Erro:", err);
+  btn.disabled = false;
+  btn.textContent = "Asociar";
+  msg.className = "msg error";
+  msg.textContent = "Erro de conexão. Verifica a consola.";
 });
-
-ZOHO.embeddedApp.init();
-
-function asociar() {
-  var generacionId = document.getElementById("generacionId").value.trim();
-  var btn = document.getElementById("btnAsociar");
-  var msg = document.getElementById("msg");
-
-  msg.className = "msg";
-  msg.textContent = "";
-
-  if (!generacionId) {
-    msg.className = "msg error";
-    msg.textContent = "Por favor introduce el ID de la Generación.";
-    return;
-  }
-  if (!dealId) {
-    msg.className = "msg error";
-    msg.textContent = "No se pudo obtener el ID del trato. Recarga la página.";
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "Asociando...";
-
-  fetch("https://www.zohoapis.eu/crm/v7/functions/rc_asociargeneraciondeal/actions/execute?auth_type=apikey&zapikey=1003.f72a4a634279bdff28a4a04409ea04aa.cd549a812552ea70665b95395bf135cb", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      arguments: JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) })
-    })
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(data) {
-    console.log("Resposta:", data);
-    btn.disabled = false;
-    btn.textContent = "Asociar";
-
-    var result = data && data.details && data.details.output
-      ? data.details.output
-      : JSON.stringify(data);
-
-    if (result.indexOf("ERROR") !== -1) {
-      msg.className = "msg error";
-      msg.textContent = result;
-    } else {
-      msg.className = "msg success";
-      msg.textContent = result;
-      document.getElementById("generacionId").value = "";
-    }
-  })
-  .catch(function(err) {
-    console.error("Erro:", err);
-    btn.disabled = false;
-    btn.textContent = "Asociar";
-    msg.className = "msg error";
-    msg.textContent = "Erro de conexão. Verifica a consola.";
-  });
-}
   </script>
 </body>
 </html>
