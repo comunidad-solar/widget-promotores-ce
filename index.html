@@ -94,12 +94,10 @@
 
 ZOHO.embeddedApp.on("PageLoad", function(data) {
   dealId = data.EntityId;
-  console.log("PageLoad recebido, dealId:", dealId);
+  console.log("PageLoad | dealId:", dealId);
 });
 
-ZOHO.embeddedApp.init().then(function() {
-  console.log("SDK inicializado");
-});
+ZOHO.embeddedApp.init();
 
 function asociar() {
   var generacionId = document.getElementById("generacionId").value.trim();
@@ -123,35 +121,36 @@ function asociar() {
   btn.disabled = true;
   btn.textContent = "Asociando...";
 
-  ZOHO.CRM.API.callFunction("RC_AsociarGeneracionDeal", {
+  var req_data = {
     arguments: JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) })
-  }).then(function(response) {
-    console.log("Resposta função:", response);
-    btn.disabled = false;
-    btn.textContent = "Asociar";
+  };
 
-    var result = "";
-    if (response && response.details && response.details.output) {
-      result = response.details.output;
-    } else {
-      result = JSON.stringify(response);
-    }
+  ZOHO.CRM.FUNCTIONS.execute("RC_AsociarGeneracionDeal", req_data)
+    .then(function(response) {
+      console.log("Resposta:", response);
+      btn.disabled = false;
+      btn.textContent = "Asociar";
 
-    if (result.indexOf("ERROR") !== -1) {
+      var result = response && response.details && response.details.output
+        ? response.details.output
+        : JSON.stringify(response);
+
+      if (result.indexOf("ERROR") !== -1) {
+        msg.className = "msg error";
+        msg.textContent = result;
+      } else {
+        msg.className = "msg success";
+        msg.textContent = result;
+        document.getElementById("generacionId").value = "";
+      }
+    })
+    .catch(function(err) {
+      console.error("Erro:", err);
+      btn.disabled = false;
+      btn.textContent = "Asociar";
       msg.className = "msg error";
-      msg.textContent = result;
-    } else {
-      msg.className = "msg success";
-      msg.textContent = result;
-      document.getElementById("generacionId").value = "";
-    }
-  }).catch(function(err) {
-    console.error("Erro callFunction:", err);
-    btn.disabled = false;
-    btn.textContent = "Asociar";
-    msg.className = "msg error";
-    msg.textContent = "Error: " + JSON.stringify(err);
-  });
+      msg.textContent = "Error: " + JSON.stringify(err);
+    });
 }
   </script>
 </body>
