@@ -121,36 +121,39 @@ function asociar() {
   btn.disabled = true;
   btn.textContent = "Asociando...";
 
-  var req_data = {
-    arguments: JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) })
-  };
-
-  ZOHO.CRM.FUNCTIONS.execute("RC_AsociarGeneracionDeal", req_data)
-    .then(function(response) {
-      console.log("Resposta:", response);
-      btn.disabled = false;
-      btn.textContent = "Asociar";
-
-      var result = response && response.details && response.details.output
-        ? response.details.output
-        : JSON.stringify(response);
-
-      if (result.indexOf("ERROR") !== -1) {
-        msg.className = "msg error";
-        msg.textContent = result;
-      } else {
-        msg.className = "msg success";
-        msg.textContent = result;
-        document.getElementById("generacionId").value = "";
-      }
+  fetch("https://www.zohoapis.eu/crm/v7/functions/rc_asociargeneraciondeal/actions/execute?auth_type=apikey&zapikey=1003.f72a4a634279bdff28a4a04409ea04aa.cd549a812552ea70665b95395bf135cb", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      arguments: JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) })
     })
-    .catch(function(err) {
-      console.error("Erro:", err);
-      btn.disabled = false;
-      btn.textContent = "Asociar";
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    console.log("Resposta:", data);
+    btn.disabled = false;
+    btn.textContent = "Asociar";
+
+    var result = data && data.details && data.details.output
+      ? data.details.output
+      : JSON.stringify(data);
+
+    if (result.indexOf("ERROR") !== -1) {
       msg.className = "msg error";
-      msg.textContent = "Error: " + JSON.stringify(err);
-    });
+      msg.textContent = result;
+    } else {
+      msg.className = "msg success";
+      msg.textContent = result;
+      document.getElementById("generacionId").value = "";
+    }
+  })
+  .catch(function(err) {
+    console.error("Erro:", err);
+    btn.disabled = false;
+    btn.textContent = "Asociar";
+    msg.className = "msg error";
+    msg.textContent = "Erro de conexão. Verifica a consola.";
+  });
 }
   </script>
 </body>
