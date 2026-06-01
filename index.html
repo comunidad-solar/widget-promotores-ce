@@ -7,74 +7,17 @@
   <script src="https://live.zwidgets.com/js-sdk/1.0.5/ZohoEmbededAppSDK.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 24px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.10);
-      padding: 32px 28px;
-      width: 100%;
-      max-width: 420px;
-    }
-    h2 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #111;
-      margin-bottom: 8px;
-    }
-    p {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 24px;
-    }
-    label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #333;
-      display: block;
-      margin-bottom: 6px;
-    }
-    input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1.5px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      color: #111;
-      outline: none;
-      transition: border-color 0.2s;
-      margin-bottom: 20px;
-    }
+    body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.10); padding: 32px 28px; width: 100%; max-width: 420px; }
+    h2 { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 8px; }
+    p { font-size: 13px; color: #666; margin-bottom: 24px; }
+    label { font-size: 13px; font-weight: 600; color: #333; display: block; margin-bottom: 6px; }
+    input { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; color: #111; outline: none; transition: border-color 0.2s; margin-bottom: 20px; }
     input:focus { border-color: #4a90e2; }
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #4a90e2;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+    button { width: 100%; padding: 12px; background: #4a90e2; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     button:hover { background: #357abd; }
     button:disabled { background: #aaa; cursor: not-allowed; }
-    .msg {
-      margin-top: 16px;
-      padding: 12px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      display: none;
-    }
+    .msg { margin-top: 16px; padding: 12px 14px; border-radius: 8px; font-size: 13px; display: none; }
     .msg.success { background: #f0fdf4; color: #166534; border: 1px solid #86efac; display: block; }
     .msg.error   { background: #fef2f2; color: #991b1b; border: 1px solid #f87171; display: block; }
   </style>
@@ -85,44 +28,76 @@
     <p>Introduce el ID de la Generación para asociarla al trato actual.</p>
     <label for="generacionId">ID de la Generación</label>
     <input type="text" id="generacionId" placeholder="Ej: 230641000154599216" />
-    <button id="btnAsociar" onclick="asociar()">Asociar</button>
+    <button id="btnAsociar">Asociar</button>
     <div class="msg" id="msg"></div>
   </div>
 
   <script>
-    var url = "https://www.zohoapis.eu/crm/v7/functions/rc_asociargeneraciondeal/actions/execute?auth_type=apikey&zapikey=1003.f72a4a634279bdff28a4a04409ea04aa.cd549a812552ea70665b95395bf135cb";
+    var dealId = null;
 
-fetch(url, {
-  method: "POST",
-  headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  body: "arguments=" + encodeURIComponent(JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) }))
-})
-.then(function(res) { return res.json(); })
-.then(function(data) {
-  console.log("Resposta:", data);
-  btn.disabled = false;
-  btn.textContent = "Asociar";
+    ZOHO.embeddedApp.on("PageLoad", function(data) {
+      dealId = data.EntityId;
+      console.log("PageLoad | dealId:", dealId);
+    });
 
-  var result = data && data.details && data.details.output
-    ? data.details.output
-    : JSON.stringify(data);
+    ZOHO.embeddedApp.init();
 
-  if (result.indexOf("ERROR") !== -1) {
-    msg.className = "msg error";
-    msg.textContent = result;
-  } else {
-    msg.className = "msg success";
-    msg.textContent = result;
-    document.getElementById("generacionId").value = "";
-  }
-})
-.catch(function(err) {
-  console.error("Erro:", err);
-  btn.disabled = false;
-  btn.textContent = "Asociar";
-  msg.className = "msg error";
-  msg.textContent = "Erro de conexão. Verifica a consola.";
-});
+    document.getElementById("btnAsociar").addEventListener("click", function() {
+      var generacionId = document.getElementById("generacionId").value.trim();
+      var btn = document.getElementById("btnAsociar");
+      var msg = document.getElementById("msg");
+
+      msg.className = "msg";
+      msg.textContent = "";
+
+      if (!generacionId) {
+        msg.className = "msg error";
+        msg.textContent = "Por favor introduce el ID de la Generación.";
+        return;
+      }
+      if (!dealId) {
+        msg.className = "msg error";
+        msg.textContent = "No se pudo obtener el ID del trato. Recarga la página.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Asociando...";
+
+      var url = "https://www.zohoapis.eu/crm/v7/functions/rc_asociargeneraciondeal/actions/execute?auth_type=apikey&zapikey=1003.f72a4a634279bdff28a4a04409ea04aa.cd549a812552ea70665b95395bf135cb";
+
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "arguments=" + encodeURIComponent(JSON.stringify({ dealId: String(dealId), generacionId: String(generacionId) }))
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        console.log("Resposta:", data);
+        btn.disabled = false;
+        btn.textContent = "Asociar";
+
+        var result = data && data.details && data.details.output
+          ? data.details.output
+          : JSON.stringify(data);
+
+        if (result.indexOf("ERROR") !== -1) {
+          msg.className = "msg error";
+          msg.textContent = result;
+        } else {
+          msg.className = "msg success";
+          msg.textContent = result;
+          document.getElementById("generacionId").value = "";
+        }
+      })
+      .catch(function(err) {
+        console.error("Erro:", err);
+        btn.disabled = false;
+        btn.textContent = "Asociar";
+        msg.className = "msg error";
+        msg.textContent = "Erro de conexão. Verifica a consola.";
+      });
+    });
   </script>
 </body>
 </html>
